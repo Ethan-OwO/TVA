@@ -30,13 +30,18 @@ add_library(tva_warnings INTERFACE)
 target_compile_options(tva_warnings INTERFACE
   -Wall -Wextra -Wpedantic $<$<CONFIG:Debug>:-Werror>)
 
+add_library(tva_core STATIC
+  src/core/sha1.cpp
+)
+target_include_directories(tva_core PUBLIC src)
+target_link_libraries(tva_core PUBLIC ZLIB::ZLIB PRIVATE tva_warnings)
+
 add_executable(tva
   src/main.cpp
   src/cli/cli.cpp
 )
-target_include_directories(tva PRIVATE src)
 target_compile_definitions(tva PRIVATE TVA_VERSION="${PROJECT_VERSION}")
-target_link_libraries(tva PRIVATE CLI11::CLI11 tva_warnings)
+target_link_libraries(tva PRIVATE tva_core CLI11::CLI11 tva_warnings)
 
 if(TVA_BUILD_TESTS)
   enable_testing()
