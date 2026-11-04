@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <system_error>
 
 #include "core/bytes.h"
 #include "core/error.h"

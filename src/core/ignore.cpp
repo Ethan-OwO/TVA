@@ -1,6 +1,8 @@
 #include "core/ignore.h"
 
 #include <cctype>
+#include <system_error>
+#include <utility>
 
 #include "core/bytes.h"
 #include "platform/fs.h"

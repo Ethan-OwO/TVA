@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <optional>
 #include <string>
+#include <system_error>
 
 #include "core/bytes.h"
 #include "core/error.h"

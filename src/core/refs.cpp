@@ -1,6 +1,7 @@
 #include "core/refs.h"
 
 #include <algorithm>
+#include <system_error>
 
 #include "core/bytes.h"
 #include "core/error.h"

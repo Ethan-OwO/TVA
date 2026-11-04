@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <string>
+#include <system_error>
 
 #include "core/error.h"
 #include "core/zlib_codec.h"

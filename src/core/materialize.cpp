@@ -1,6 +1,7 @@
 #include "core/materialize.h"
 
 #include <string>
+#include <system_error>
 #include <unordered_set>
 #include <vector>
 

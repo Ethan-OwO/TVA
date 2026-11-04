@@ -1,5 +1,7 @@
 #include "core/refs.h"
 
+#include <algorithm>
+
 #include <gtest/gtest.h>
 
 #include "core/error.h"
