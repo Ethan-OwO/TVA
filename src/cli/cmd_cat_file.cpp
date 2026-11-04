@@ -6,8 +6,22 @@
 #include "cli/common.h"
 #include "core/error.h"
 #include "core/rev_parse.h"
+#include "core/tree.h"
 
 namespace tva::cli {
+namespace {
+
+// Same layout as `git cat-file -p <tree>`: mode zero-padded to 6 digits.
+void print_tree(const core::Tree& tree) {
+  for (const auto& e : tree.entries) {
+    std::string mode = core::mode_string(e.mode);
+    std::cout << std::string(6 - mode.size(), '0') << mode << ' '
+              << (core::is_directory(e.mode) ? "tree" : "blob") << ' ' << e.id.hex() << '\t'
+              << e.name << '\n';
+  }
+}
+
+}  // namespace
 
 void register_cat_file(CLI::App& app) {
   struct Options {
@@ -39,7 +53,11 @@ void register_cat_file(CLI::App& app) {
     }
     auto obj = repo.odb().read(id);
     if (!obj) throw core::Error("not a valid object name " + opt->rev);
-    write_stdout(obj->payload);
+    if (obj->type == core::ObjectType::Tree) {
+      print_tree(core::parse_tree(obj->payload));
+    } else {
+      write_stdout(obj->payload);
+    }
   });
 }
 

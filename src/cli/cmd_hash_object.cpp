@@ -6,6 +6,7 @@
 #include "cli/common.h"
 #include "core/error.h"
 #include "core/object.h"
+#include "core/tree.h"
 #include "platform/fs.h"
 
 namespace tva::cli {
@@ -25,6 +26,8 @@ void register_hash_object(CLI::App& app) {
     auto type = core::parse_object_type(opt->type);
     if (!type) throw core::Error("invalid object type \"" + opt->type + "\"");
     core::Bytes data = platform::read_file(opt->file);
+    // Like git, refuse to hash something that is not a well-formed object.
+    if (*type == core::ObjectType::Tree) (void)core::parse_tree(data);
     core::ObjectId id = opt->write ? open_repo().odb().write(*type, data)
                                    : core::hash_object(*type, data);
     std::cout << id.hex() << '\n';

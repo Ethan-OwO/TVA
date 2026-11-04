@@ -95,4 +95,8 @@ Bytes ObjectDatabase::read_blob(const ObjectId& id) const {
   return read_typed(id, ObjectType::Blob).payload;
 }
 
+Tree ObjectDatabase::read_tree(const ObjectId& id) const {
+  return parse_tree(read_typed(id, ObjectType::Tree).payload);
+}
+
 }  // namespace tva::core

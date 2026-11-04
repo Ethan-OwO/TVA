@@ -10,6 +10,7 @@
 #include "core/bytes.h"
 #include "core/object.h"
 #include "core/object_id.h"
+#include "core/tree.h"
 
 namespace tva::core {
 
@@ -34,8 +35,10 @@ class ObjectDatabase {
   std::vector<ObjectId> resolve_prefix(std::string_view hex_prefix) const;
 
   ObjectId write_blob(ByteView data) { return write(ObjectType::Blob, data); }
+  ObjectId write_tree(const Tree& tree) { return write(ObjectType::Tree, serialize_tree(tree)); }
   // Typed reads throw if the object is missing or has another type.
   Bytes read_blob(const ObjectId& id) const;
+  Tree read_tree(const ObjectId& id) const;
 
  private:
   RawObject read_typed(const ObjectId& id, ObjectType expected) const;

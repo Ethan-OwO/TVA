@@ -31,6 +31,7 @@ target_compile_options(tva_warnings INTERFACE
   -Wall -Wextra -Wpedantic $<$<CONFIG:Debug>:-Werror>)
 
 add_library(tva_core STATIC
+  src/core/ignore.cpp
   src/core/object.cpp
   src/core/object_database.cpp
   src/core/object_id.cpp
@@ -38,6 +39,8 @@ add_library(tva_core STATIC
   src/core/repository.cpp
   src/core/rev_parse.cpp
   src/core/sha1.cpp
+  src/core/snapshot.cpp
+  src/core/tree.cpp
   src/core/zlib_codec.cpp
   src/platform/fs_posix.cpp
 )
@@ -50,6 +53,7 @@ add_executable(tva
   src/cli/cmd_cat_file.cpp
   src/cli/cmd_hash_object.cpp
   src/cli/cmd_init.cpp
+  src/cli/cmd_write_tree.cpp
 )
 target_compile_definitions(tva PRIVATE TVA_VERSION="${PROJECT_VERSION}")
 target_link_libraries(tva PRIVATE tva_core CLI11::CLI11 tva_warnings)

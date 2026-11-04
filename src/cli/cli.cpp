@@ -18,6 +18,7 @@ int run(int argc, char** argv) {
   register_init(app);
   register_hash_object(app);
   register_cat_file(app);
+  register_write_tree(app);
 
   // Subcommand callbacks run inside parse(), so their exceptions land here.
   try {

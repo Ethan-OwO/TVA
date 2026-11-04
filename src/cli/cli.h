@@ -15,5 +15,6 @@ int run(int argc, char** argv);
 void register_init(CLI::App& app);
 void register_hash_object(CLI::App& app);
 void register_cat_file(CLI::App& app);
+void register_write_tree(CLI::App& app);
 
 }  // namespace tva::cli
