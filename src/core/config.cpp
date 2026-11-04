@@ -26,16 +26,20 @@ class Parser {
   Parser(std::string_view text, std::string_view origin) : text_(text), origin_(origin) {}
 
   void run(std::unordered_map<std::string, std::string>& out) {
-    while (!text_.empty()) {
-      std::size_t nl = text_.find('\n');
-      std::string_view line = text_.substr(0, nl);
-      text_.remove_prefix(nl == std::string_view::npos ? text_.size() : nl + 1);
-      ++line_no_;
-      parse_line(line, out);
-    }
+    while (!text_.empty()) parse_line(take_line(), out);
   }
 
  private:
+  // Next line without its "\n" (or "\r\n").
+  std::string_view take_line() {
+    std::size_t nl = text_.find('\n');
+    std::string_view line = text_.substr(0, nl);
+    text_.remove_prefix(nl == std::string_view::npos ? text_.size() : nl + 1);
+    if (line.ends_with('\r')) line.remove_suffix(1);
+    ++line_no_;
+    return line;
+  }
+
   [[noreturn]] void fail(const std::string& what) const {
     throw Error("bad config line " + std::to_string(line_no_) + " in " + std::string(origin_) +
                 ": " + what);
@@ -96,7 +100,8 @@ class Parser {
   }
 
   // Mirrors git's parse_value(): unquoted whitespace is trimmed at both ends
-  // but kept inside the value; quotes may cover any part of the value.
+  // but kept inside the value; quotes may cover any part of the value; a
+  // trailing backslash continues the value on the next line.
   std::string parse_value(std::string_view s) {
     std::string value;
     bool quoted = false;
@@ -114,7 +119,13 @@ class Parser {
         continue;
       }
       if (c == '\\') {
-        if (++i >= s.size()) fail("trailing backslash");
+        if (++i >= s.size()) {
+          // Backslash-newline: the value continues on the next line.
+          if (text_.empty()) break;
+          s = take_line();
+          i = static_cast<std::size_t>(-1);  // ++i in the loop header makes it 0
+          continue;
+        }
         switch (s[i]) {
           case 'n': c = '\n'; break;
           case 't': c = '\t'; break;

@@ -50,6 +50,12 @@ TEST(Config, CommentsQuotesAndWhitespace) {
   EXPECT_EQ(c.get("core", "g"), "mixed quoted part");
 }
 
+TEST(Config, BackslashContinuesValue) {
+  auto c = parse("[alias]\r\n\tlg = log \\\r\n --oneline\n[user]\nname = x\n");
+  EXPECT_EQ(c.get("alias", "lg"), "log  --oneline");
+  EXPECT_EQ(c.get("user", "name"), "x");
+}
+
 TEST(Config, LaterValuesWin) {
   auto c = parse("[user]\nname = first\n[user]\nname = second\n");
   EXPECT_EQ(c.get("user", "name"), "second");

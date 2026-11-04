@@ -20,5 +20,7 @@ void register_commit_tree(CLI::App& app);
 void register_snapshot(CLI::App& app);
 void register_rev_parse(CLI::App& app);
 void register_log(CLI::App& app);
+void register_status(CLI::App& app);
+void register_restore(CLI::App& app);
 
 }  // namespace tva::cli

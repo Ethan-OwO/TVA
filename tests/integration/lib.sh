@@ -54,3 +54,16 @@ assert_exit() {
   "$@" >/dev/null 2>&1 || code=$?
   [[ "$code" == "$expected" ]] || fail "expected exit code $expected got $code from: $*"
 }
+
+# Prints one line per path below the current directory (excluding .git):
+# type, permissions and content (or link target). Two equal fingerprints mean
+# nothing in the worktree changed.
+worktree_fingerprint() {
+  find . -path ./.git -prune -o -mindepth 1 -printf '%P %y %m\n' | sort | while read -r path type mode; do
+    case "$type" in
+      f) echo "$path f $mode $(sha1sum <"$path" | cut -d' ' -f1)" ;;
+      l) echo "$path l $(readlink "$path")" ;;
+      *) echo "$path $type" ;;
+    esac
+  done
+}

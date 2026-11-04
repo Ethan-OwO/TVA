@@ -34,6 +34,7 @@ add_library(tva_core STATIC
   src/core/commit.cpp
   src/core/config.cpp
   src/core/ignore.cpp
+  src/core/materialize.cpp
   src/core/object.cpp
   src/core/object_database.cpp
   src/core/object_id.cpp
@@ -43,6 +44,7 @@ add_library(tva_core STATIC
   src/core/sha1.cpp
   src/core/snapshot.cpp
   src/core/tree.cpp
+  src/core/tree_diff.cpp
   src/core/zlib_codec.cpp
   src/platform/clock_posix.cpp
   src/platform/fs_posix.cpp
@@ -58,8 +60,10 @@ add_executable(tva
   src/cli/cmd_hash_object.cpp
   src/cli/cmd_init.cpp
   src/cli/cmd_log.cpp
+  src/cli/cmd_restore.cpp
   src/cli/cmd_rev_parse.cpp
   src/cli/cmd_snapshot.cpp
+  src/cli/cmd_status.cpp
   src/cli/cmd_write_tree.cpp
 )
 target_compile_definitions(tva PRIVATE TVA_VERSION="${PROJECT_VERSION}")

@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -14,6 +15,13 @@ namespace tva::cli {
 
 inline core::Repository open_repo() {
   return core::Repository::discover(std::filesystem::current_path());
+}
+
+// Tree of the commit HEAD points to; nullopt on an unborn branch.
+inline std::optional<core::ObjectId> head_tree(const core::Repository& repo) {
+  auto head = repo.refs().resolve("HEAD");
+  if (!head) return std::nullopt;
+  return repo.odb().read_commit(*head).tree;
 }
 
 inline std::string short_id(const core::ObjectId& id) { return id.hex().substr(0, 7); }

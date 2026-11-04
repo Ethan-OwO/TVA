@@ -23,9 +23,9 @@ void register_snapshot(CLI::App& app) {
     const std::optional<std::string> branch = repo.refs().symbolic_target("HEAD");
     const std::string ref = branch.value_or("HEAD");
     const std::optional<core::ObjectId> parent = repo.refs().resolve(ref);
-    const core::ObjectId head_tree =
+    const core::ObjectId parent_tree =
         parent ? repo.odb().read_commit(*parent).tree : core::hash_object(core::ObjectType::Tree, {});
-    if (head_tree == tree) {
+    if (parent_tree == tree) {
       std::cout << "nothing changed\n";
       return;
     }
