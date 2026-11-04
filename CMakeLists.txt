@@ -32,6 +32,7 @@ target_compile_options(tva_warnings INTERFACE
 
 add_library(tva_core STATIC
   src/core/sha1.cpp
+  src/core/zlib_codec.cpp
 )
 target_include_directories(tva_core PUBLIC src)
 target_link_libraries(tva_core PUBLIC ZLIB::ZLIB PRIVATE tva_warnings)
