@@ -5,6 +5,7 @@
 #include "cli/cli.h"
 #include "cli/common.h"
 #include "core/error.h"
+#include "core/commit.h"
 #include "core/object.h"
 #include "core/tree.h"
 #include "platform/fs.h"
@@ -28,6 +29,7 @@ void register_hash_object(CLI::App& app) {
     core::Bytes data = platform::read_file(opt->file);
     // Like git, refuse to hash something that is not a well-formed object.
     if (*type == core::ObjectType::Tree) (void)core::parse_tree(data);
+    if (*type == core::ObjectType::Commit) (void)core::parse_commit(data);
     core::ObjectId id = opt->write ? open_repo().odb().write(*type, data)
                                    : core::hash_object(*type, data);
     std::cout << id.hex() << '\n';

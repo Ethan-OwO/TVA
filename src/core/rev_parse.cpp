@@ -37,8 +37,46 @@ ObjectId resolve_base(const Repository& repo, std::string_view spec) {
 }  // namespace
 
 ObjectId rev_parse(const Repository& repo, std::string_view spec) {
-  if (spec.empty()) throw Error("empty revision");
-  return resolve_base(repo, spec);
+  const std::size_t cut = spec.find_first_of("~^");
+  const std::string_view base = spec.substr(0, cut);
+  if (base.empty()) throw Error("unknown revision '" + std::string(spec) + "'");
+  ObjectId id = resolve_base(repo, base);
+
+  for (std::size_t pos = cut; pos < spec.size();) {
+    const char op = spec[pos++];
+    if (op != '~' && op != '^') throw Error("unknown revision '" + std::string(spec) + "'");
+    std::size_t digits_end = pos;
+    while (digits_end < spec.size() && spec[digits_end] >= '0' && spec[digits_end] <= '9') {
+      ++digits_end;
+    }
+    std::size_t n = 1;
+    if (digits_end > pos) {
+      if (digits_end - pos > 9) throw Error("unknown revision '" + std::string(spec) + "'");
+      n = std::stoul(std::string(spec.substr(pos, digits_end - pos)));
+    }
+    pos = digits_end;
+
+    auto commit_of = [&](const ObjectId& c) {
+      auto header = repo.odb().read_header(c);
+      if (!header || header->first != ObjectType::Commit) {
+        throw Error("revision '" + std::string(spec) + "' does not name a commit");
+      }
+      return repo.odb().read_commit(c);
+    };
+    if (op == '~') {
+      for (std::size_t i = 0; i < n; ++i) {
+        Commit c = commit_of(id);
+        if (c.parents.empty()) throw Error("unknown revision '" + std::string(spec) + "'");
+        id = c.parents.front();
+      }
+    } else {
+      Commit c = commit_of(id);
+      if (n == 0) continue;
+      if (n > c.parents.size()) throw Error("unknown revision '" + std::string(spec) + "'");
+      id = c.parents[n - 1];
+    }
+  }
+  return id;
 }
 
 }  // namespace tva::core

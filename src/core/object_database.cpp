@@ -99,4 +99,8 @@ Tree ObjectDatabase::read_tree(const ObjectId& id) const {
   return parse_tree(read_typed(id, ObjectType::Tree).payload);
 }
 
+Commit ObjectDatabase::read_commit(const ObjectId& id) const {
+  return parse_commit(read_typed(id, ObjectType::Commit).payload);
+}
+
 }  // namespace tva::core

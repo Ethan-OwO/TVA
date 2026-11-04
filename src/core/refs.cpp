@@ -97,6 +97,42 @@ std::optional<std::string> RefStore::symbolic_target(std::string_view name) cons
   return std::nullopt;
 }
 
+namespace {
+
+platform::LockFile lock_ref(const fs::path& path, std::string_view name) {
+  std::error_code ec;
+  fs::create_directories(path.parent_path(), ec);
+  if (ec) throw Error("unable to lock ref " + std::string(name) + ": " + ec.message());
+  auto lock = platform::LockFile::try_acquire(path);
+  if (!lock) throw Error("unable to lock ref " + std::string(name));
+  return std::move(*lock);
+}
+
+}  // namespace
+
+void RefStore::update(std::string_view name, const ObjectId& new_id,
+                      std::optional<ObjectId> expected_old) {
+  fs::path path = ref_path(name);
+  platform::LockFile lock = lock_ref(path, name);
+  // Re-read under the lock: anyone else updating this ref must hold the
+  // same lock, so the value cannot change between this check and commit().
+  if (resolve(name) != expected_old) {
+    throw Error("ref " + std::string(name) + " changed concurrently");
+  }
+  lock.write(as_bytes(new_id.hex() + "\n"));
+  lock.commit();
+}
+
+void RefStore::set_symbolic(std::string_view name, std::string_view target) {
+  if (!target.starts_with("refs/") || !is_valid_ref_name(target)) {
+    throw Error("invalid symbolic ref target '" + std::string(target) + "'");
+  }
+  fs::path path = ref_path(name);
+  platform::LockFile lock = lock_ref(path, name);
+  lock.write(as_bytes("ref: " + std::string(target) + "\n"));
+  lock.commit();
+}
+
 std::vector<std::pair<std::string, ObjectId>> RefStore::list(std::string_view prefix) const {
   std::vector<std::pair<std::string, ObjectId>> out;
   std::error_code ec;

@@ -2,6 +2,8 @@
 
 #include <filesystem>
 
+#include "core/commit.h"
+#include "core/config.h"
 #include "core/object_database.h"
 #include "core/refs.h"
 
@@ -25,6 +27,16 @@ class Repository {
   const ObjectDatabase& odb() const { return odb_; }
   RefStore& refs() { return refs_; }
   const RefStore& refs() const { return refs_; }
+  // Global git config (XDG then ~/.gitconfig), then <git_dir>/config.
+  const Config& config() const { return config_; }
+
+  // Author identity: GIT_AUTHOR_NAME / GIT_AUTHOR_EMAIL / GIT_AUTHOR_DATE,
+  // falling back to user.name / user.email and the current local time.
+  // GIT_*_DATE must look like "<unix seconds> <+HHMM>" (optionally "@<secs>").
+  Signature current_signature() const;
+  // Committer identity from GIT_COMMITTER_*; each unset part equals the
+  // author's.
+  Signature current_committer() const;
 
  private:
   explicit Repository(std::filesystem::path worktree_root);
@@ -34,6 +46,7 @@ class Repository {
   std::filesystem::path tva_dir_;
   ObjectDatabase odb_;
   RefStore refs_;
+  Config config_;
 };
 
 }  // namespace tva::core

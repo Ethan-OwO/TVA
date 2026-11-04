@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "core/bytes.h"
+#include "core/commit.h"
 #include "core/object.h"
 #include "core/object_id.h"
 #include "core/tree.h"
@@ -36,9 +37,11 @@ class ObjectDatabase {
 
   ObjectId write_blob(ByteView data) { return write(ObjectType::Blob, data); }
   ObjectId write_tree(const Tree& tree) { return write(ObjectType::Tree, serialize_tree(tree)); }
+  ObjectId write_commit(const Commit& c) { return write(ObjectType::Commit, serialize_commit(c)); }
   // Typed reads throw if the object is missing or has another type.
   Bytes read_blob(const ObjectId& id) const;
   Tree read_tree(const ObjectId& id) const;
+  Commit read_commit(const ObjectId& id) const;
 
  private:
   RawObject read_typed(const ObjectId& id, ObjectType expected) const;
