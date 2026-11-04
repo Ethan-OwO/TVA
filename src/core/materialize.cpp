@@ -35,7 +35,7 @@ bool remove_empty_dir_tree(const fs::path& dir) {
 
 class Materializer {
  public:
-  Materializer(Repository& repo) : repo_(repo), root_(repo.worktree_root()) {}
+  explicit Materializer(Repository& repo) : repo_(repo), root_(repo.worktree_root()) {}
 
   void run(const ObjectId& target_tree, const ObjectId& current_tree) {
     std::vector<PathChange> changes = diff_trees(repo_.odb(), current_tree, target_tree);

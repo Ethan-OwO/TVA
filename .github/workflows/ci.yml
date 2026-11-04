@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sanitizers:
+    # Same-repo pull requests are already covered by the push event.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+    name: ${{ matrix.compiler }} · Debug · ASan+UBSan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: gcc 13
+            packages: g++
+            cc: gcc
+            cxx: g++
+          - compiler: clang 18
+            packages: clang-18 libclang-rt-18-dev
+            cc: clang-18
+            cxx: clang++-18
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install toolchain
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q ninja-build zlib1g-dev ${{ matrix.packages }}
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DTVA_SANITIZE=ON
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  oldest-toolchain:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+    name: gcc 11 · Release · Ubuntu 22.04
+    runs-on: ubuntu-24.04
+    container: ubuntu:22.04  # g++ 11, CMake 3.22, git 2.34: the oldest supported setup
+    timeout-minutes: 30
+    steps:
+      - name: Install toolchain
+        run: |
+          apt-get update -q
+          apt-get install -y -q --no-install-recommends ca-certificates git g++ cmake ninja-build zlib1g-dev
+      - uses: actions/checkout@v6
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure

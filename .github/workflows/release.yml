@@ -1,0 +1,62 @@
+name: Release
+
+# Push a tag like v0.1.0 (matching project(VERSION) in CMakeLists.txt) to
+# build, test and publish a Linux binary as a GitHub release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build linux-x86_64
+    runs-on: ubuntu-24.04
+    # Built on the oldest supported distro so the binary runs on glibc >= 2.35.
+    container: ubuntu:22.04
+    timeout-minutes: 30
+    steps:
+      - name: Install toolchain
+        run: |
+          apt-get update -q
+          apt-get install -y -q --no-install-recommends ca-certificates git g++ cmake ninja-build zlib1g-dev
+      - uses: actions/checkout@v6
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_EXE_LINKER_FLAGS="-static-libstdc++ -static-libgcc"
+          cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Check that the tag matches the built version
+        run: test "$(./build/tva --version)" = "tva ${GITHUB_REF_NAME#v}"
+      - name: Package
+        run: |
+          name="tva-${GITHUB_REF_NAME}-linux-x86_64"
+          mkdir "$name"
+          cp build/tva LICENSE "$name/"
+          strip "$name/tva"
+          tar -czf "$name.tar.gz" "$name"
+          sha256sum "$name.tar.gz" >"$name.tar.gz.sha256"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: dist
+          path: tva-*.tar.gz*
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: dist
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" tva-*.tar.gz* \
+            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes

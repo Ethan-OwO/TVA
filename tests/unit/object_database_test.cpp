@@ -36,7 +36,7 @@ TEST(ObjectDatabase, ObjectFilesAreReadOnly) {
   ObjectId id = odb.write_blob(as_bytes("x"));
   struct ::stat st{};
   ASSERT_EQ(::stat(odb.object_path(id).c_str(), &st), 0);
-  EXPECT_EQ(st.st_mode & 0777, 0444u);
+  EXPECT_EQ(st.st_mode & 0222, 0u);  // no write bits, whatever the umask
   EXPECT_EQ(odb.write_blob(as_bytes("x")), id);  // rewrite of an existing object is a no-op
 }
 
