@@ -1,6 +1,7 @@
 #include "core/refs.h"
 
 #include <algorithm>
+#include <iterator>
 #include <system_error>
 
 #include "core/bytes.h"
@@ -100,6 +101,18 @@ std::optional<std::string> RefStore::symbolic_target(std::string_view name) cons
 
 namespace {
 
+// Removes `dir` and its parents while they are empty, but never refs/ or
+// refs/<category>/ themselves.
+void prune_empty_ref_dirs(const fs::path& git_dir, fs::path dir) {
+  for (;;) {
+    const fs::path rel = dir.lexically_relative(git_dir);
+    if (std::distance(rel.begin(), rel.end()) <= 2) return;
+    std::error_code ec;
+    if (!fs::is_empty(dir, ec) || ec || !fs::remove(dir, ec)) return;
+    dir = dir.parent_path();
+  }
+}
+
 platform::LockFile lock_ref(const fs::path& path, std::string_view name) {
   std::error_code ec;
   fs::create_directories(path.parent_path(), ec);
@@ -122,6 +135,23 @@ void RefStore::update(std::string_view name, const ObjectId& new_id,
   }
   lock.write(as_bytes(new_id.hex() + "\n"));
   lock.commit();
+}
+
+void RefStore::remove(std::string_view name, const ObjectId& expected_old) {
+  fs::path path = ref_path(name);
+  std::error_code ec;
+  if (!fs::is_regular_file(path, ec)) {  // also keeps lock_ref() from creating directories
+    throw Error("ref " + std::string(name) + " changed concurrently");
+  }
+  {
+    platform::LockFile lock = lock_ref(path, name);
+    if (resolve(name) != expected_old) {
+      throw Error("ref " + std::string(name) + " changed concurrently");
+    }
+    fs::remove(path, ec);
+    if (ec) throw Error("cannot delete ref " + std::string(name) + ": " + ec.message());
+  }  // releasing the lock deletes <ref>.lock, so its directory can be pruned
+  prune_empty_ref_dirs(git_dir_, path.parent_path());
 }
 
 void RefStore::set_symbolic(std::string_view name, std::string_view target) {

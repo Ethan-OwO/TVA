@@ -22,5 +22,6 @@ void register_rev_parse(CLI::App& app);
 void register_log(CLI::App& app);
 void register_status(CLI::App& app);
 void register_restore(CLI::App& app);
+void register_pr(CLI::App& app);
 
 }  // namespace tva::cli

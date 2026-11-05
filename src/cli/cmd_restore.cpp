@@ -35,7 +35,7 @@ void register_restore(CLI::App& app) {
     // The snapshot doubles as a safety net: with --force, the discarded
     // content is still in the object database.
     const core::ObjectId current = core::snapshot_worktree(repo);
-    const core::ObjectId head = head_tree(repo).value_or(core::hash_object(core::ObjectType::Tree, {}));
+    const core::ObjectId head = head_tree(repo).value_or(core::empty_tree_id());
     if (current != head && !opt->force) {
       throw core::Error("worktree has unsnapshotted changes; run tva snapshot or use --force");
     }

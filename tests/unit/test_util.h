@@ -1,7 +1,10 @@
 #pragma once
 
 #include <atomic>
+#include <cstdlib>
 #include <filesystem>
+#include <map>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -45,5 +48,41 @@ inline std::string read_text(const std::filesystem::path& p) {
   auto bytes = platform::read_file(p);
   return std::string(core::as_chars(bytes));
 }
+
+// Sets environment variables for one test and restores them afterwards.
+class EnvGuard {
+ public:
+  EnvGuard() = default;
+  EnvGuard(const EnvGuard&) = delete;
+  EnvGuard& operator=(const EnvGuard&) = delete;
+  ~EnvGuard() {
+    for (auto& [name, old] : saved_) {
+      if (old) {
+        ::setenv(name.c_str(), old->c_str(), 1);
+      } else {
+        ::unsetenv(name.c_str());
+      }
+    }
+  }
+
+  // nullptr unsets the variable.
+  void set(const char* name, const char* value) {
+    remember(name);
+    if (value) {
+      ::setenv(name, value, 1);
+    } else {
+      ::unsetenv(name);
+    }
+  }
+
+ private:
+  void remember(const char* name) {
+    if (saved_.count(name)) return;
+    const char* v = std::getenv(name);
+    saved_[name] = v ? std::optional<std::string>(v) : std::nullopt;
+  }
+
+  std::map<std::string, std::optional<std::string>> saved_;
+};
 
 }  // namespace tva::test

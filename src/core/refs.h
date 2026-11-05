@@ -40,6 +40,10 @@ class RefStore {
   // on a mismatch and Error("unable to lock ref <name>") if the lock is held.
   // `name` itself is written (a symbolic ref is not followed).
   void update(std::string_view name, const ObjectId& new_id, std::optional<ObjectId> expected_old);
+  // Compare-and-delete under the same lock: throws Error("ref <name> changed
+  // concurrently") unless `name` currently resolves to `expected_old`. Like
+  // git, directories below refs/<category>/ that become empty are removed.
+  void remove(std::string_view name, const ObjectId& expected_old);
   void set_symbolic(std::string_view name, std::string_view target);
   // Every ref under refs/ whose name starts with `prefix`, resolved, sorted.
   std::vector<std::pair<std::string, ObjectId>> list(std::string_view prefix) const;

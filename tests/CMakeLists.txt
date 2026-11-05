@@ -7,10 +7,12 @@ add_executable(tva_unit_tests
   unit/materialize_test.cpp
   unit/object_database_test.cpp
   unit/object_test.cpp
+  unit/pr_test.cpp
   unit/refs_test.cpp
   unit/repository_test.cpp
   unit/rev_parse_test.cpp
   unit/sha1_test.cpp
+  unit/trailers_test.cpp
   unit/tree_diff_test.cpp
   unit/tree_test.cpp
   unit/zlib_codec_test.cpp
@@ -22,7 +24,7 @@ gtest_discover_tests(tva_unit_tests DISCOVERY_MODE PRE_TEST)
 # against real git. TVA_BIN tells them which binary to run.
 find_program(BASH_PROGRAM bash REQUIRED)
 find_program(GIT_PROGRAM git REQUIRED)
-foreach(name hash_object write_tree commit_log fsck restore)
+foreach(name hash_object write_tree commit_log fsck restore pr)
   add_test(NAME integration.${name}
            COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/integration/test_${name}.sh)
   set_tests_properties(integration.${name} PROPERTIES ENVIRONMENT "TVA_BIN=$<TARGET_FILE:tva>")

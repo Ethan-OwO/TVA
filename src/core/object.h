@@ -38,4 +38,8 @@ RawObject decode_loose(ByteView decompressed);
 // sha1(encode_loose(type, payload)), computed without building the copy.
 ObjectId hash_object(ObjectType type, ByteView payload);
 
+// 4b825dc642cb6eb9a060e54bf8d69288fbee4904: the tree of an empty directory,
+// which stands for "nothing" (an unborn branch, a missing side of a diff).
+ObjectId empty_tree_id();
+
 }  // namespace tva::core

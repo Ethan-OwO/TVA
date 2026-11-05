@@ -1,7 +1,7 @@
 # TVA
 
 C++20 從零實作的版本控制工具,磁碟格式與 git 完全相容(直接讀寫 `.git/`)。
-規劃文件在 `docs/`(`roadmap_v1.md`、`plan_M<n>.md`);實作細節以程式碼與測試為準。目前完成 M1。
+規劃文件在 `docs/`(`roadmap_v1.md`、`plan_M<n>.md`);實作細節以程式碼與測試為準。目前完成 M2。
 
 ## 建置與測試
 
@@ -17,7 +17,7 @@ ctest --test-dir build --output-on-failure
 
 ## 結構
 
-- `src/core/`(`tva::core`):物件模型、物件庫、ref、ignore、snapshot / materialize、tree diff。
+- `src/core/`(`tva::core`):物件模型、物件庫、ref、ignore、snapshot / materialize、tree diff;PR(`pr`)、切換 branch(`checkout`)、commit trailer(`trailers`)。
 - `src/platform/`(`tva::platform`):唯一可以直接呼叫 OS API 的地方(目前 POSIX,M9 補 Windows)。
 - `src/cli/`(`tva::cli`):一個子指令一個 `cmd_<name>.cpp`,在 `cli.cpp` 註冊。
 - `tests/unit/`:GoogleTest。`tests/integration/`:bash 腳本,用真 git 當 oracle(在隔離的 `HOME` 下執行)。
@@ -37,3 +37,5 @@ ctest --test-dir build --output-on-failure
 - tree entry 依名稱位元組排序,但目錄名視為尾端多一個 `/`;目錄 mode 寫 `40000`。
 - commit message 非空且不以 `\n` 結尾時補 `\n`;時區 `±HHMM`;身分字串照 git 去掉頭尾雜字元。
 - `.gitignore` 比對(`src/core/ignore.cpp`)是 git `wildmatch.c` 的逐行移植,修改時要對照原始碼。
+- TVA 的 metadata 一律用 git 原生形式:message 最後一段的 `TVA-*` trailer(第一段永遠不算 trailer,同 git 的 `trailer.c`),整合測試用 `git interpret-trailers --parse` 驗證。
+- PR = `refs/heads/pr/<slug>`,第一個 commit 是「開 PR commit」(tree 等於 base、parent 是開 PR 當下的 main、message 是意圖 + `TVA-PR-Open: <slug>`)。`main` 是保留 slug。

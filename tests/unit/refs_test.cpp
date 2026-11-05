@@ -110,6 +110,31 @@ TEST_F(RefsTest, SetSymbolicAndList) {
   EXPECT_EQ(refs.list("refs/").size(), 3u);
 }
 
+TEST_F(RefsTest, RemoveIsACompareAndDelete) {
+  RefStore refs(git());
+  refs.update("refs/heads/pr/deep/x", kA, std::nullopt);
+  refs.update("refs/heads/pr/y", kA, std::nullopt);
+
+  EXPECT_THROW(refs.remove("refs/heads/pr/deep/x", kB), Error);  // value differs
+  EXPECT_THROW(refs.remove("refs/heads/pr/missing", kA), Error);
+  EXPECT_EQ(refs.resolve("refs/heads/pr/deep/x"), kA);
+
+  refs.remove("refs/heads/pr/deep/x", kA);
+  EXPECT_FALSE(refs.resolve("refs/heads/pr/deep/x"));
+  EXPECT_FALSE(std::filesystem::exists(git() / "refs/heads/pr/deep"));  // emptied dirs go
+  EXPECT_EQ(files_in(git() / "refs/heads/pr"), std::vector<std::string>{"y"});
+
+  refs.remove("refs/heads/pr/y", kA);
+  EXPECT_FALSE(std::filesystem::exists(git() / "refs/heads/pr"));
+  EXPECT_TRUE(std::filesystem::is_directory(git() / "refs/heads"));  // categories stay
+
+  // A held lock blocks the delete, and the ref survives.
+  refs.update("refs/heads/z", kA, std::nullopt);
+  test::write_text(git() / "refs/heads/z.lock", "");
+  EXPECT_THROW(refs.remove("refs/heads/z", kA), Error);
+  EXPECT_EQ(refs.resolve("refs/heads/z"), kA);
+}
+
 TEST(RefName, Validation) {
   for (const char* ok : {"HEAD", "refs/heads/main", "refs/heads/pr/login-page", "refs/tva/merged/pr/x",
                          "refs/tags/v1.0"}) {

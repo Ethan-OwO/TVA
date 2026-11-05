@@ -2,7 +2,7 @@
 
 為「AI agent 寫 code」設計的版本控制工具,以 C++20 從零實作,儲存格式與 git 完全相容。名稱取自《Loki》的 Time Variance Authority。
 
-目前完成 M1(物件庫與快照核心),完整路線見 [docs/roadmap_v1.md](docs/roadmap_v1.md)。
+目前完成 M2(PR 基礎),完整路線見 [docs/roadmap_v1.md](docs/roadmap_v1.md)。
 
 ## 建置
 
@@ -15,7 +15,20 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-## 指令(M1)
+## 指令
+
+### PR(M2)
+
+| 指令 | 說明 |
+|---|---|
+| `tva pr open "<意圖>" [--slug <s>]` | 以 main 為 base 開一個 PR(branch `pr/<slug>`)並切過去;意圖的第一段是標題 |
+| `tva pr list` | 列出所有 PR,`*` 標示目前所在的 PR |
+| `tva pr switch <slug>\|main [--force]` | 切到某個 PR 或回到 main(Sacred Timeline),並改寫工作目錄 |
+| `tva pr show [<slug>]` | 顯示 PR 的標題、描述、base、head 與 moment |
+
+PR 就是一般的 git branch。它的第一個 commit(開 PR commit)tree 與 base 相同、message 存意圖並帶 `TVA-PR-Open: <slug>` trailer,所以 push 到 GitHub 時 PR 資訊會跟著走。slug 由標題的英數字產生(全中文標題得到 `pr`、`pr-2`…),細節見 [docs/plan_M2.md](docs/plan_M2.md)。
+
+### 快照與 plumbing(M1)
 
 | 指令 | 說明 |
 |---|---|
