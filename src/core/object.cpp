@@ -92,4 +92,9 @@ ObjectId hash_object(ObjectType type, ByteView payload) {
   return ObjectId{s.finish()};
 }
 
+ObjectId empty_tree_id() {
+  static const ObjectId id = hash_object(ObjectType::Tree, {});
+  return id;
+}
+
 }  // namespace tva::core

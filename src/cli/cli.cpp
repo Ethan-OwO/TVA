@@ -25,6 +25,7 @@ int run(int argc, char** argv) {
   register_log(app);
   register_status(app);
   register_restore(app);
+  register_pr(app);
 
   // Subcommand callbacks run inside parse(), so their exceptions land here.
   try {

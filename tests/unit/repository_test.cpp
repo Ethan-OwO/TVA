@@ -2,44 +2,11 @@
 
 #include <gtest/gtest.h>
 
-#include <cstdlib>
-#include <map>
-
 #include "core/error.h"
 #include "test_util.h"
 
 namespace tva::core {
 namespace {
-
-// Sets environment variables for one test and restores them afterwards.
-class EnvGuard {
- public:
-  void set(const char* name, const char* value) {
-    remember(name);
-    if (value) {
-      ::setenv(name, value, 1);
-    } else {
-      ::unsetenv(name);
-    }
-  }
-  ~EnvGuard() {
-    for (auto& [name, old] : saved_) {
-      if (old) {
-        ::setenv(name.c_str(), old->c_str(), 1);
-      } else {
-        ::unsetenv(name.c_str());
-      }
-    }
-  }
-
- private:
-  void remember(const char* name) {
-    if (saved_.count(name)) return;
-    const char* v = std::getenv(name);
-    saved_[name] = v ? std::optional<std::string>(v) : std::nullopt;
-  }
-  std::map<std::string, std::optional<std::string>> saved_;
-};
 
 class RepositoryTest : public ::testing::Test {
  protected:
@@ -54,7 +21,7 @@ class RepositoryTest : public ::testing::Test {
   }
 
   test::TempDir tmp_;
-  EnvGuard env_;
+  test::EnvGuard env_;
 };
 
 TEST_F(RepositoryTest, InitLayout) {
